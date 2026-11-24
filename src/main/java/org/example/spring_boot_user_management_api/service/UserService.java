@@ -71,6 +71,15 @@ public class UserService {
         return mapToResponse(updatedUser);
     }
 
+    //Delete (DELETE)
+    @Transactional
+    public void deleteUser(Long id) {
+
+        User user = findUserByIdOrThrow(id);
+
+        userRepository.delete(user);
+    }
+
     private User findUserByIdOrThrow(Long id) {
 
         return userRepository.findById(id)
