@@ -1,5 +1,6 @@
 package org.example.spring_boot_user_management_api.service;
 
+import org.example.spring_boot_user_management_api.exception.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.spring_boot_user_management_api.dto.UserRequest;
 import org.example.spring_boot_user_management_api.dto.UserResponse;
@@ -45,6 +46,35 @@ public class UserService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    //Update (PUT)
+    @Transactional
+    public UserResponse updateUser(Long id, UserRequest request) {
+
+        User user = findUserByIdOrThrow(id);
+
+        boolean emailUsedByAnotherPerson = userRepository.existsByEmailAndIdNot(
+                request.email(),
+                id
+        );
+
+        if (emailUsedByAnotherPerson) {
+            throw new DuplicateResourceException("Another user is already using this email");
+        }
+
+        user.setName(request.name());
+        user.setEmail(request.email());
+
+        User updatedUser = userRepository.save(user);
+
+        return mapToResponse(updatedUser);
+    }
+
+    private User findUserByIdOrThrow(Long id) {
+
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + id));
     }
 
     private UserResponse mapToResponse(User user) {
